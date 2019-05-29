@@ -62,6 +62,9 @@ def cross_mapping(y, neighbors, statistic = "mean"):
         "mean" or "median"
     """
 
+    if np.ndim(y) == 1:
+        y = y[:, None]
+
     assert statistic in ['mean', 'median']
 
     y_features = y[:, :, None][neighbors]

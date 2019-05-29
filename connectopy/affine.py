@@ -11,7 +11,7 @@ class OLS_MV(object):
         if True, adds intercept column to x matrix
     """
 
-    def __init__(self, include_intercept):
+    def __init__(self, include_intercept=True):
 
         self.intercept = include_intercept
 
