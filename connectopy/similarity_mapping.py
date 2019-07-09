@@ -23,7 +23,12 @@ def cross_similarity(x, y, k=5, metric='correlation'):
     Returns:
     - - - -
     neighbors: int, array
-        top K nearest neighbors in target region to source region
+        Top K nearest neighbors in target region to source region
+        
+        Each row in ```neighbors``` corresponds to a sample in ```x```.
+        Each index (i, j) in ```neighbors``` corresponds to sample ```j``` in
+        ```y``` to which sample ```i``` in ```x``` is most similar, where
+        ```j``` ranges in value from [0, y.shape[0]].
 
     Example:
     - - - -
@@ -68,6 +73,8 @@ def cross_mapping(y, neighbors, statistic = "mean"):
     assert statistic in ['mean', 'median']
 
     y_features = y[:, :, None][neighbors]
+    if np.ndim(neighbors) == 1:
+        return y_features.squeeze()
 
     if statistic == "mean":
 
@@ -78,7 +85,9 @@ def cross_mapping(y, neighbors, statistic = "mean"):
         y_summary = []
         
         for k in y_features:
-            L.fit(k.squeeze())
+
+            temp_k = k.squeeze()
+            L.fit(temp_k)
             y_summary.append(L.median_)
         
         y_summary = np.row_stack(y_summary)

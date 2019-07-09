@@ -40,7 +40,7 @@ class L1(object):
             # randomly perturb
             if self.equality(samples, med):
 
-                med = med + np.random.normal(med.std(), med.mean(), np.shape(med))
+                med = med + np.random.normal(loc=med.mean(), scale=med.std(), size=med.shape)
 
             update = self.weiszfeld(samples, med)
 
