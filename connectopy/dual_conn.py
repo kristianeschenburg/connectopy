@@ -36,9 +36,11 @@ class DualConn(object):
         Meta-method to compute source-to-target mappings.
         """
 
+        print('Computing single pair maps.')
         uti.s2t_mappings(self.subject_id, self.region_map, self.hemisphere, 
                        features, connectopy_dir)
         
+        print('Aggregating pair maps.')
         uti.st2_mappingcounts(self.subject_id, self.region_map, self.hemisphere, 
                              connectopy_dir)
 
@@ -48,9 +50,11 @@ class DualConn(object):
         Meta-method to compute source-to-target correlations.
         """
 
+        print('Computing single pair correlation maps.')
         uti.s2t_correlations(self.subject_id, self.region_map, self.hemisphere, 
                          features, connectopy_dir)
 
+        print('Aggregating pair maps.')
         uti.s2t_correlations_aggregate(self.subject_id, self.region_map, self.hemisphere, 
                                    connectopy_dir)
 

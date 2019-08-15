@@ -341,7 +341,7 @@ def s2t_mappings(subject_id, region_map, hemisphere, features, connectopy_dir):
     for j, source_region in enumerate(list(region_map.keys())):
         if source_region not in ['corpuscallosum']:
             
-            print('Source Map ID: {:}'.format(j))
+            print('Source Map ID: {:}, {:}'.format(j, source_region))
             
             for target_region in region_map.keys():
                 if target_region not in ['corpuscallosum']:
@@ -368,13 +368,12 @@ def st2_mappingcounts(subject_id, region_map, hemisphere, connectopy_dir):
     
     """
     for j, source_region in enumerate(list(region_map.keys())):
-        if source_region != 'corpuscallosum':
+        if source_region not in ['corpuscallosum']:
             
-            print('Source Map ID: {:}'.format(j))
             z = np.zeros((32492, 50))
             
             for target_region in region_map.keys():
-                if target_region != 'corpuscallosum':
+                if target_region not in ['corpuscallosum']:
                     
                     neighbor_file = '{:}NeighborMappings/{:}/{:}.{:}.{:}.2.{:}.Neighbors.mat'.format(connectopy_dir,
                                                                                             subject_id,
@@ -407,15 +406,15 @@ def s2t_correlations(subject_id, region_map, hemisphere, features, connectopy_di
     """
 
     for j, source_region in enumerate(list(region_map.keys())[:-1]):
-        if source_region != 'corpuscallosum':
+        if source_region not in ['corpuscallosum']:
             
-            print('Source Map ID: {:}'.format(j))
+            print('Source Map ID: {:}, {:}'.format(j, source_region))
             
             source_inds = region_map[source_region]
             source_features = features[source_inds, :]
 
             for i, target_region in enumerate(list(region_map.keys())[j:]):
-                if target_region != 'corpuscallosum':
+                if target_region not in ['corpuscallosum']:
 
                     target_inds = region_map[target_region]
                     target_features = features[target_inds, :]
@@ -455,15 +454,15 @@ def s2t_correlations_aggregate(subject_id, region_map, hemisphere, connectopy_di
     """
     Sub-method to aggregate source-to-target correlation maps.
     """
-    for j, target_region in enumerate(list(region_map.keys())):
-        if target_region != 'corpuscallosum':
+    for j, target_region in enumerate(list(region_map.keys())[:-1]):
+        if target_region not in ['corpuscallosum']:
             
-            print('Source Map ID: {:}'.format(j))
+            print('Source Map ID: {:}, {:}'.format(j, target_region))
             target_inds = region_map[target_region]
 
             z = np.zeros((32492, 50))
-            for source_region in region_map.keys():
-                if source_region != 'corpuscallosum':
+            for i, source_region in enumerate(list(region_map.keys())[j:]):
+                if source_region not in ['corpuscallosum']:
                     source_inds = region_map[source_region]
 
                     knn_file = '{:}NeighborFunctional/{:}/{:}.{:}.{:}.2.{:}.mean_knn.func.gii'.format(connectopy_dir,
@@ -493,9 +492,9 @@ def s2t_dispersion(subject_id, region_map, hemisphere, dat_dir, connectopy_dir):
     Sub-method to compute distance between mapped neighbors.
     """
     for j, target_region in enumerate(list(region_map.keys())):
-        if target_region != 'corpuscallosum':
+        if target_region not in ['corpuscallosum']:
             
-            print('Source Map ID: {:}'.format(j))
+            print('Source Map ID: {:}, {:}'.format(j, target_region))
 
             target_inds = region_map[target_region]
             target_maps = dict(zip(target_inds, np.arange(len(target_inds))))
@@ -510,7 +509,7 @@ def s2t_dispersion(subject_id, region_map, hemisphere, dat_dir, connectopy_dir):
 
             z = np.zeros((32492, ISIZE))
             for i, source_region in enumerate(list(region_map.keys())):
-                if source_region != 'corpuscallosum':
+                if source_region not in ['corpuscallosum']:
                     source_inds = region_map[source_region]
 
                     neighbor_file = '{:}NeighborMappings/{:}/{:}.{:}.{:}.2.{:}.Neighbors.mat'.format(connectopy_dir,
@@ -553,7 +552,7 @@ def regional_shortest_path(subject_id, region_map, hemisphere, dat_dir):
     
     for j, source_region in enumerate(region_map.keys()):
         
-        print('Source Map ID: {:}'.format(j))
+        print('Source Map ID: {:}, {:}'.format(j, source_region))
         
         out_dist = '{:}/{:}.{:}.{:}.DistanceMap'.format(out_dir,
                                                         subject_id,
