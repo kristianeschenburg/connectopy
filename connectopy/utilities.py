@@ -462,7 +462,7 @@ def s2t_correlations_aggregate(subject_id, region_map, hemisphere, connectopy_di
 
             z = np.zeros((32492, 50))
             for i, source_region in enumerate(list(region_map.keys())[j:]):
-                if source_region not in ['corpuscallosum']:
+                if source_region not in ['corpuscallosum', target_region]:
                     source_inds = region_map[source_region]
 
                     knn_file = '{:}NeighborFunctional/{:}/{:}.{:}.{:}.2.{:}.mean_knn.func.gii'.format(connectopy_dir,
