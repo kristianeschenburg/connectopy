@@ -1,6 +1,7 @@
 import numpy as np
 from niio import loaded, write
 from fragmenter import RegionExtractor as re
+import os
 import argparse
 
 parser = argparse.ArgumentParser()
