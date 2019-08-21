@@ -236,6 +236,9 @@ def plot_dispersion(subject_id, region_1, region_2, dir_label, dir_func, dir_dis
 
     [g, x, y] = pair(subject_id, region_1, region_2, dir_label,
                      dir_func, dir_dist, hemisphere, nsize)
+    print('X: {:}'.format(x.shape))
+    print('Y: {:}'.format(y.shape))
+    
     out_density = '%s%s.%s.Density.%s.2.%s.jpg' % (subj_outdir, subject_id,
                                                       hemisphere, region_1, region_2)
 
@@ -262,6 +265,9 @@ def plot_dispersion(subject_id, region_1, region_2, dir_label, dir_func, dir_dis
 
     [g, x, y] = pair(subject_id, region_2, region_1, dir_label,
                      dir_func, dir_dist, hemisphere, nsize)
+    print('X: {:}'.format(x.shape))
+    print('Y: {:}'.format(y.shape))
+
     out_density = '%s%s.%s.Density.%s.2.%s.jpg' % (subj_outdir, subject_id,
                                                       hemisphere, region_2, region_1)
 
