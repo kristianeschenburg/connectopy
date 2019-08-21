@@ -66,11 +66,8 @@ def csv2matrix(subject_id, hemisphere, modeldir):
     coef_file = '%s%s.%s.Fit.Coefficients.csv' % (
         subj_dir, subject_id, hemisphere)
     coefs = pd.read_csv(coef_file, index_col=False)
-    print(coefs.shape)
     regions = list(coefs['target_region'].unique())
     regions.sort()
-
-    print('# Regions: {:}'.format(len(regions)))
 
     nr = len(regions)
 
@@ -81,7 +78,6 @@ def csv2matrix(subject_id, hemisphere, modeldir):
 
     n, p = coefs.shape
 
-    print('Looping over rows.')
     for j in np.arange(n):
 
         temp = coefs.iloc[j]

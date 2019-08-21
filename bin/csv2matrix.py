@@ -15,18 +15,11 @@ subject_id = args.subject
 hemisphere = args.hemisphere
 modeldir = args.modeldir
 
-print('Subject: {:}'.format(subject_id))
-print('Hemisphere: {:}'.format(hemisphere))
-print('Directory: {:}'.format(modeldir))
-
-print('Converting csv file to matrix.')
 [amp, exp] = plotting.csv2matrix(subject_id, hemisphere, modeldir)
 
-print('Converting matrices to dictionaries.')
 amp = {'amplitude': amp}
 exp = {'exponent': exp}
 
-print('Defining paths.')
 dir_out = '%s%s/' % (modeldir, subject_id)
 
 out_amp = '%s%s.%s.Amplitude.mat' % (dir_out,
@@ -36,6 +29,5 @@ out_exp = '%s%s.%s.Exponent.mat' % (dir_out,
                                     subject_id, 
                                     hemisphere)
 
-print('Saving dictionaries.')
 sio.savemat(file_name=out_amp, mdict=amp)
 sio.savemat(file_name=out_exp, mdict=exp)
