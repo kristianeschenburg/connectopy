@@ -454,14 +454,14 @@ def s2t_correlations_aggregate(subject_id, region_map, hemisphere, connectopy_di
     """
     Sub-method to aggregate source-to-target correlation maps.
     """
-    for j, target_region in enumerate(list(region_map.keys())[:-1]):
+    for j, target_region in enumerate(list(region_map.keys())):
         if target_region not in ['corpuscallosum']:
             
             print('Source Map ID: {:}, {:}'.format(j, target_region))
             target_inds = region_map[target_region]
 
             z = np.zeros((32492, ISIZE))
-            for i, source_region in enumerate(list(region_map.keys())[j:]):
+            for i, source_region in enumerate(list(region_map.keys())):
                 if source_region not in ['corpuscallosum', target_region]:
                     source_inds = region_map[source_region]
 
