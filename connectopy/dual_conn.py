@@ -55,7 +55,7 @@ class DualConn(object):
                          features, connectopy_dir)
 
         print('Aggregating pair maps.')
-        uti.s2t_correlations_aggregate(self.subject_id, self.region_map, self.hemisphere, 
+        uti.s2t_correlations_aggregate(self.subject_id, self.region_map, self.hemisphere,
                                    connectopy_dir)
 
     def paths(self, data_dir):

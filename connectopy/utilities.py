@@ -25,7 +25,7 @@ ISIZE=50
 def plot_pairwise(sim_features, region_map, connectopy_dir,
                   out_dir, out_base,
                   subject_id, source_id, target_id,
-                  max_neighborhood=50, plot=False, plot_neighborhood_sizes=[]):
+                  max_neighborhood=ISIZE, plot=False, plot_neighborhood_sizes=[]):
     
     """
     Method to save and plot scatterplot matrices of source-to-target connectopy mappings.
@@ -370,7 +370,7 @@ def st2_mappingcounts(subject_id, region_map, hemisphere, connectopy_dir):
     for j, source_region in enumerate(list(region_map.keys())):
         if source_region not in ['corpuscallosum']:
             
-            z = np.zeros((32492, 50))
+            z = np.zeros((32492, ISIZE))
             
             for target_region in region_map.keys():
                 if target_region not in ['corpuscallosum']:
@@ -460,7 +460,7 @@ def s2t_correlations_aggregate(subject_id, region_map, hemisphere, connectopy_di
             print('Source Map ID: {:}, {:}'.format(j, target_region))
             target_inds = region_map[target_region]
 
-            z = np.zeros((32492, 50))
+            z = np.zeros((32492, ISIZE))
             for i, source_region in enumerate(list(region_map.keys())[j:]):
                 if source_region not in ['corpuscallosum', target_region]:
                     source_inds = region_map[source_region]
@@ -472,7 +472,8 @@ def s2t_correlations_aggregate(subject_id, region_map, hemisphere, connectopy_di
                                                                                                       source_region,
                                                                                                       target_region)
                     knn = loaded.load(knn_file)
-                    z += knn
+                    n, p = knn.shape
+                    z[:, :p] += knn
 
             z[target_inds, :] = np.nan
             out_dir = '{:}NeighborFunctional/{:}'.format(connectopy_dir, subject_id)
