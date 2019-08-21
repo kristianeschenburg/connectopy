@@ -70,6 +70,8 @@ def csv2matrix(subject_id, hemisphere, modeldir):
     regions = list(coefs['target_region'].unique())
     regions.sort()
 
+    print('# Regions: {:}'.format(len(regions)))
+
     nr = len(regions)
 
     reg_map = dict(zip(regions, np.arange(nr)))
@@ -79,6 +81,7 @@ def csv2matrix(subject_id, hemisphere, modeldir):
 
     n, p = coefs.shape
 
+    print('Looping over rows.')
     for j in np.arange(n):
 
         temp = coefs.iloc[j]
