@@ -320,7 +320,9 @@ def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsiz
     print('NSize: {:}'.format(nsize))
 
     x = dist[source_indices, nsize]
+    print(x)
     y = knn[source_indices, nsize]
+    print(y)
 
     print('X pair: {:}'.format(x.shape))
     print('Y pair: {:}'.format(y.shape))
