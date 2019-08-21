@@ -238,7 +238,7 @@ def plot_dispersion(subject_id, region_1, region_2, dir_label, dir_func, dir_dis
                      dir_func, dir_dist, hemisphere, nsize)
     print('X: {:}'.format(x.shape))
     print('Y: {:}'.format(y.shape))
-    
+
     out_density = '%s%s.%s.Density.%s.2.%s.jpg' % (subj_outdir, subject_id,
                                                       hemisphere, region_1, region_2)
 
@@ -299,10 +299,12 @@ def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsiz
     base_knn = '%s.%s.knn_mean.2.%s.func.gii' % (subject_id, hemisphere, treg)
     in_knn = '%s%s/%s' % (dir_func, subject_id, base_knn)
     knn = loaded.load(in_knn)
+    print('KNN: {:}'.format(knn.shape))
 
     base_dist = '%s.%s.Distance.2.%s.func.gii' % (subject_id, hemisphere, treg)
     in_dist = '%s%s/%s' % (dir_dist, subject_id, base_dist)
     dist = loaded.load(in_dist)
+    print('DIST: {:}'.format(dist.shape))
 
     in_label = '%s%s.%s.aparc.32k_fs_LR.label.gii' % (
         dir_label, subject_id, hemisphere)
@@ -315,11 +317,18 @@ def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsiz
     x = dist[source_indices, nsize]
     y = knn[source_indices, nsize]
 
+    print('X pair: {:}'.format(x.shape))
+    print('Y pair: {:}'.format(y.shape))
+
     inds = np.arange(len(source_indices))[~np.isnan(y)]
     inds = inds[y[inds] != 0]
+    print('Inds: {:}'.format(inds.shape))
 
     x = x[inds]
     y = y[inds]
+
+    print('X pair inds: {:}'.format(x.shape))
+    print('Y pair inds: {:}'.format(y.shape))
 
     df = pd.DataFrame({'Size': x[np.argsort(x)],
                        'Correlation': y[np.argsort(x)]
