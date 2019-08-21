@@ -312,7 +312,9 @@ def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsiz
     region_map = R.map_regions()
 
     source_indices = region_map[sreg]
+    print('Source Inds: {:}'.format(source_indices.shape))
     nsize = nsize-1
+    print('NSize: {:}'.format(nsize))
 
     x = dist[source_indices, nsize]
     y = knn[source_indices, nsize]
