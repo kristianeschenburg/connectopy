@@ -66,6 +66,7 @@ def csv2matrix(subject_id, hemisphere, modeldir):
     coef_file = '%s%s.%s.Fit.Coefficients.csv' % (
         subj_dir, subject_id, hemisphere)
     coefs = pd.read_csv(coef_file, index_col=False)
+    print(coefs.shape)
     regions = list(coefs['target_region'].unique())
     regions.sort()
 

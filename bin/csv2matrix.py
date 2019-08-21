@@ -15,6 +15,10 @@ subject_id = args.subject
 hemisphere = args.hemisphere
 modeldir = args.modeldir
 
+print('Subject: {:}'.format(subject_id))
+print('Hemisphere: {:}'.format(hemisphere))
+print('Directory: {:}'.format(modeldir))
+
 print('Converting csv file to matrix.')
 [amp, exp] = plotting.csv2matrix(subject_id, hemisphere, modeldir)
 
