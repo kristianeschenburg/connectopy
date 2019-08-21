@@ -90,6 +90,8 @@ def csv2matrix(subject_id, hemisphere, modeldir):
         exponent[reg_map[temp['source_region']],
                  reg_map[temp['target_region']]] = temp['exponent']
 
+    return [amplitude, exponent]
+
 
 def plot_regional(subject_id, hemisphere, modeldir):
     """
