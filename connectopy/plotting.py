@@ -22,7 +22,7 @@ import pandas as pd
 Set of methods for plotting the results of source-to-target
 correlation vs. dispersion data.
 
-csv_2_matrix:
+csv2matrix:
     Convert aggregated coefficient csv files to directed adjacency matrices.
     
 plot_regional:
@@ -47,7 +47,7 @@ plot_model_fit:
 """
 
 
-def csv_to_matrix(subject_id, hemisphere, modeldir):
+def csv2matrix(subject_id, hemisphere, modeldir):
     """
     Convert aggregated model coefficients to matrix representation.
     Rows of matrix represent source.  Columns of matric represent target.
