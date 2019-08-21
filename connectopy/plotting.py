@@ -296,6 +296,9 @@ def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsiz
     Sub method for a single direction analysis (source-to-target).
     """
 
+    print('Source Region: {:}'.format(sreg))
+    print('Target Region: {:}'.format(treg))
+
     base_knn = '%s.%s.knn_mean.2.%s.func.gii' % (subject_id, hemisphere, treg)
     in_knn = '%s%s/%s' % (dir_func, subject_id, base_knn)
     knn = loaded.load(in_knn)
