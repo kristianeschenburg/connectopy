@@ -78,14 +78,16 @@ def csv2matrix(subject_id, hemisphere, modeldir, mtype):
     reg_map = dict(zip(regions, np.arange(nr)))
 
     params = list(set(list(coefs.columns)).difference(
-        ['source_region', 'target_region', 'aic', 'bic', 'name']))
+        ['Unnamed: 0', 'source_region', 'target_region', 
+        'aic', 'bic', 'name']))
 
     n, p = coefs.shape
 
     for param in params:
+        temp_array = np.zeros((nr, nr))
+
         for j in np.arange(n):
 
-            temp_array = np.zeros((nr, nr))
             temp_data = coefs.iloc[j]
 
             temp_source = temp_data['source_region']
@@ -94,7 +96,7 @@ def csv2matrix(subject_id, hemisphere, modeldir, mtype):
             temp_array[reg_map[temp_source], reg_map[temp_target]] = temp_data[param]
         
         temp = {param: temp_array}
-        out_matrix = '%s%s.%s' % (subj_dir, subject_id, hemisphere, mtype, param)
+        out_matrix = '%s%s.%s.%s.%s' % (subj_dir, subject_id, hemisphere, mtype, param)
         sio.savemat(file_name=out_matrix, mdict=temp)
 
 
