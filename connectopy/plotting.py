@@ -2,6 +2,7 @@ from glob import glob
 import os
 
 import numpy as np
+import scipy.io as sio
 
 import lmfit
 from lmfit import Model, models
@@ -47,7 +48,8 @@ plot_model_fit:
 """
 
 
-def csv2matrix(subject_id, hemisphere, modeldir):
+def csv2matrix(subject_id, hemisphere, modeldir, mtype):
+
     """
     Convert aggregated model coefficients to matrix representation.
     Rows of matrix represent source.  Columns of matric represent target.
@@ -60,11 +62,13 @@ def csv2matrix(subject_id, hemisphere, modeldir):
         L/R
     modeldir: string
         Path where model coefficients are saved
+    mtype: string
+        type of model (Power, Exponent)
     """
 
     subj_dir = '%s%s/' % (modeldir, subject_id)
-    coef_file = '%s%s.%s.Fit.Coefficients.csv' % (
-        subj_dir, subject_id, hemisphere)
+    coef_file = '%s%s.%s.%s.Fit.Coefficients.csv' % (
+        subj_dir, subject_id, hemisphere, mtype)
     coefs = pd.read_csv(coef_file, index_col=False)
     regions = list(coefs['target_region'].unique())
     regions.sort()
@@ -73,97 +77,29 @@ def csv2matrix(subject_id, hemisphere, modeldir):
 
     reg_map = dict(zip(regions, np.arange(nr)))
 
-    amplitude = np.zeros((nr, nr))
-    exponent = np.zeros((nr, nr))
+    params = list(set(list(coefs.columns)).difference(
+        ['source_region', 'target_region', 'aic', 'bic', 'name']))
 
     n, p = coefs.shape
 
-    for j in np.arange(n):
+    for param in params:
+        for j in np.arange(n):
 
-        temp = coefs.iloc[j]
-        amplitude[reg_map[temp['source_region']],
-                  reg_map[temp['target_region']]] = temp['amplitude']
-        exponent[reg_map[temp['source_region']],
-                 reg_map[temp['target_region']]] = temp['exponent']
+            temp_array = np.zeros((nr, nr))
+            temp_data = coefs.iloc[j]
 
-    return [amplitude, exponent]
+            temp_source = temp_data['source_region']
+            temp_target = temp_data['target_region']
 
-
-def plot_regional(subject_id, hemisphere, modeldir):
-    """
-    For each region in cortical atlas, plot the model coefficients, 
-    using that region as either the source or target.  OLS line is 
-    fit to each data type and plotted
-    
-    Example usage:
+            temp_array[reg_map[temp_source], reg_map[temp_target]] = temp_data[param]
         
-    Using 'bankssts' as source region
-    df.head()
-    'source_region' 'target_region' 'exponent' 'amplitude'
-     bankssts       frontalpole      1          2
-     bankssts       temporalpole     1          3
-     
-    Using 'bankssts' as target region
-    df.head()
-    'source_region' 'target_region' 'exponent' 'amplitude'
-     frontalpole    bankssts         1          2
-     temporalpole   bankssts         1          3
-    
-    """
-
-    subj_dir = '%s%s/' % (modeldir, subject_id)
-    coef_file = '%s%s.%s.Fit.Coefficients.csv' % (
-        subj_dir, subject_id, hemisphere)
-    coefs = pd.read_csv(coef_file, index_col=False)
-
-    [xmin, xmax] = coefs.amplitude.min(), coefs.amplitude.max()
-    [ymin, ymax] = coefs.exponent.min(), coefs.exponent.max()
-
-    regions = list(coefs['target_region'].unique())
-
-    targets = {reg: None for reg in regions}
-    sources = {reg: None for reg in regions}
-
-    for reg in regions:
-
-        targets[reg] = coefs[coefs['target_region'] == reg]
-        sources[reg] = coefs[coefs['source_region'] == reg]
-
-    L = lm.LinearRegression(fit_intercept=True)
-    for reg in regions:
-
-        xpred = np.linspace(xmin, xmax, 100)
-
-        xtarg = targets[reg]['amplitude']
-        ytarg = targets[reg]['exponent']
-        L.fit(X=xtarg[:, None], y=ytarg)
-        ytarg_hat = L.predict(xpred[:, None])
-
-        xsour = sources[reg]['amplitude']
-        ysour = sources[reg]['exponent']
-        L.fit(X=xsour[:, None], y=ysour)
-        ysour_hat = L.predict(xpred[:, None])
-
-        fig = plt.figure(figsize=(12, 8))
-        plt.scatter(xtarg, ytarg, marker='.', c='b', label='Target')
-        plt.plot(xpred, ytarg_hat, c='b')
-
-        plt.scatter(xsour, ysour, marker='.', c='r', label='Source')
-        plt.plot(xpred, ysour_hat, c='r')
-
-        plt.legend(fontsize=15)
-        plt.xlabel('Amplitude', fontsize=15)
-        plt.ylabel('Exponent', fontsize=15)
-        plt.title(reg, fontsize=15)
-        plt.xlim([xmin, xmax])
-        plt.ylim([ymin, ymax])
-
-        plt.savefig('%s%s.%s.%s.OLS.jpg' %
-                    (subj_dir, subject_id, hemisphere, reg))
-        plt.close()
+        temp = {param: temp_array}
+        out_matrix = '%s%s.%s' % (subj_dir, subject_id, hemisphere, mtype, param)
+        sio.savemat(file_name=out_matrix, mdict=temp)
 
 
-def aggregate_model_coefficients(subject_id, hemisphere, modeldir):
+def aggregate_model_fits(subject_id, hemisphere, modeldir, mtype):
+
     """
     Aggregate the coefficients across all region pairs for a single subject.
     
@@ -175,11 +111,13 @@ def aggregate_model_coefficients(subject_id, hemisphere, modeldir):
         L/R
     modeldir: string
         Oath where model coefficients are saved
+    mtype: string
+        Model type, in ['Power', 'Exponential', 'Linear']
     """
 
     subj_dir = '%s%s/' % (modeldir, subject_id)
-    model_extension = '%s.%s.Fit.Coefficients.*.2.*.csv' % (
-        subject_id, hemisphere)
+    model_extension = '%s.%s.%s.Fit.Coefficients.*.2.*.csv' % (
+        subject_id, hemisphere, mtype)
     model_files = glob('%s%s' % (subj_dir, model_extension))
 
     m = [None]*len(model_files)
@@ -189,8 +127,8 @@ def aggregate_model_coefficients(subject_id, hemisphere, modeldir):
 
     models = pd.concat(m, sort=False)
     models.index = np.arange(models.shape[0])
-    out_coefs = '%s%s.%s.Fit.Coefficients.csv' % (
-        subj_dir, subject_id, hemisphere)
+    out_coefs = '%s%s.%s.%s.Fit.Coefficients.csv' % (
+        subj_dir, subject_id, hemisphere, mtype)
     models.to_csv(out_coefs)
 
     return models
@@ -227,71 +165,90 @@ def plot_dispersion(subject_id, region_1, region_2, dir_label, dir_func, dir_dis
         Default = 5
     """
 
-    sreg = []
-    treg = []
-    exponents = []
-    amplitude = []
-
     subj_outdir = '%s%s/' % (outdir, subject_id)
     if not os.path.exists(subj_outdir):
         os.mkdir(subj_outdir)
 
-    [g, x, y] = pair(subject_id, region_1, region_2, dir_label,
-                     dir_func, dir_dist, hemisphere, nsize)
+    [_, X, y] = prep_data(subject_id, region_1, region_2, dir_label,
+              dir_func, dir_dist, hemisphere, nsize)
 
-    out_density = '%s%s.%s.Density.%s.2.%s.jpg' % (subj_outdir, subject_id,
-                                                      hemisphere, region_1, region_2)
+    # g = density(X, y, region_1, region_2)
+    M = fit(X, y)
 
-    model = fit(x, y)
-    sreg.append(region_1)
-    treg.append(region_2)
-    exponents.append(model.best_values['exponent'])
-    amplitude.append(model.best_values['amplitude'])
-
-    p = plot_model_fit(model)
-    out_fit = '%s%s.%s.Fit.%s.2.%s.jpg' % (subj_outdir, subject_id,
-                                              hemisphere, region_1, region_2)
-    p.savefig(out_fit)
-    plt.close()
-
-    coefs = {'source_region': [region_1],
-             'target_region': [region_2],
-             'exponent': [model.best_values['exponent']],
-             'amplitude': [model.best_values['amplitude']]}
-    coefs = pd.DataFrame(coefs)
-    out_df = '%s%s.%s.Fit.Coefficients.%s.2.%s.csv' % (subj_outdir, subject_id,
-                                                          hemisphere, region_1, region_2)
-    coefs.to_csv(out_df, index=False)
-
-    [g, x, y] = pair(subject_id, region_2, region_1, dir_label,
-                     dir_func, dir_dist, hemisphere, nsize)
-
-    out_density = '%s%s.%s.Density.%s.2.%s.jpg' % (subj_outdir, subject_id,
-                                                      hemisphere, region_2, region_1)
-
-    model = fit(x, y)
-    sreg.append(region_2)
-    treg.append(region_1)
-    exponents.append(model.best_values['exponent'])
-    amplitude.append(model.best_values['amplitude'])
-    p = plot_model_fit(model)
-    out_fit = '%s%s.%s.Fit.%s.2.%s.jpg' % (subj_outdir, subject_id,
-                                              hemisphere, region_2, region_1)
-    p.savefig(out_fit)
-    plt.close()
-    coefs = {'source_region': [region_2],
-             'target_region': [region_1],
-             'exponent': [model.best_values['exponent']],
-             'amplitude': [model.best_values['amplitude']]}
-    coefs = pd.DataFrame(coefs)
-    out_df = '%s%s.%s.Fit.Coefficients.%s.2.%s.csv' % (subj_outdir, subject_id,
-                                                          hemisphere, region_2, region_1)
-    coefs.to_csv(out_df, index=False)
-
-def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsize):
+    for model, mtype in zip(M, ['Exponential', 'Power', 'Linear']):
+        save_model(outdir, mtype, subject_id, 
+                    hemisphere, model, region_1, region_2)
     
+    [_, X, y] = prep_data(subject_id, region_2, region_1, dir_label,
+                       dir_func, dir_dist, hemisphere, nsize)
+
+    # g = density(X, y, region_2, region_1)
+    M = fit(X, y)
+
+    for model, mtype in zip(M, ['Exponential', 'Power', 'Linear']):
+        save_model(outdir, mtype, subject_id,
+                   hemisphere, model, region_2, region_1)
+
+
+def density(X, y, sreg, treg):
+
     """
-    Sub method for a single direction analysis (source-to-target).
+    Plot the 2d-density of the size vs correlation data.
+
+    Parameters:
+    - - - - -
+    X: float, array
+        independent variable
+    y: float, array
+        dependent variable
+    
+    Returns:
+    - - - -
+    g: figure
+        density plot
+    """
+
+    df = pd.DataFrame({'Size': X,
+                       'Correlation': y})
+    
+    g = (ggplot(df, aes('Size', 'Correlation'))
+         + geom_point(alpha=0.5, size=0.25)
+         + geom_density_2d(size=1, color='r')
+         + plotnine.ggtitle('Dispersion Correlations\n{:} --> {:}'.format(sreg, treg)))
+
+    return g
+
+
+def prep_data(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsize):
+
+    """
+    Source and target distance and correlation data for modeling.
+
+    Parameters:
+    - - - - -
+    subject_id: string
+        Subject name
+    sreg, treg: string
+        source, target region pair
+    dir_label: string
+        Directory where labels exist
+    dir_func: string
+        Directory where Nearest Neighbor correlation maps exist
+    dir_dist: string:
+        Directory where Nearest Neighbor distance maps exist
+    hemisphere: string
+        Hemisphere to process, in ['L', 'R']
+    nsize: int
+        neighborhood size
+
+    Returns:
+    - - - -
+    inds: int, array
+        indices of source voxels
+    x: float, array
+        dispersion vector
+    y: float, array
+        correlation vector
     """
 
     base_knn = '%s.%s.knn_mean.2.%s.func.gii' % (subject_id, hemisphere, treg)
@@ -319,16 +276,119 @@ def pair(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsiz
     x = x[inds]
     y = y[inds]
 
-    df = pd.DataFrame({'Size': x[np.argsort(x)],
-                       'Correlation': y[np.argsort(x)]
-                       })
+    return [inds, x, y]
 
-    g = (ggplot(df, aes('Size', 'Correlation'))
-         + geom_point(alpha=0.5, size=0.25)
-         + geom_density_2d(size=1, color='r')
-         + plotnine.ggtitle('Dispersion Correlations\n{:} --> {:}'.format(sreg, treg)))
 
-    return [g, x, y]
+def save_model(dir_out, mtype, subject_id, hemisphere, model, sreg, treg):
+
+    """
+    Method to save a model and plot the fit and residuals.
+
+    Parameters:
+    - - - - -
+    dir_out: string
+        Directory where model coefficients and plots are saved
+    mtype: string
+        Model type, in ['Power', 'Exponential', 'Linear']
+    subject_id: string
+        Subject name
+    hemisphere: string
+        Hemisphere to process, in ['L', 'R']
+    model: lmfit model object
+        fitted model
+    sreg, treg: string
+        source, target region pair
+    """
+
+    [F, gridspec] = model.plot()
+    ax0 = F.axes[0]
+    ax1 = F.axes[1]
+
+    curr_title = ax0.get_title()
+    ax0_title = curr_title + ' Residuals'
+    ax1_tight = curr_title + ' Fit'
+    ext = '%s to %s\n' % (sreg, treg)
+    ax0.set_title(ext + ax0_title)
+    ax1.set_title(ext + ax1_tight)
+    F.tight_layout()
+
+    data_dict = {'source_region': [sreg],
+                 'target_region': [treg]}
+
+    for k, v in model.params.valuesdict().items():
+        data_dict[k] = v
+    
+    data_dict['aic'] = [model.aic]
+    data_dict['bic'] = [model.bic]
+    data_dict['name'] = [model.model.name]
+
+    df = pd.DataFrame(data_dict)
+
+    subj_ext = '%s%s/%s.%s.' % (dir_out, subject_id, subject_id, hemisphere)
+    
+    out_df = '%s%s.Fit.Coefficients.%s.2.%s.csv' % (subj_ext, mtype, sreg, treg)
+    df.to_csv(out_df, index=False)
+
+    out_fig = '%s%s.Fit.%s.2.%s.jpg' % (subj_ext, mtype, sreg, treg)
+    F.savefig(out_fig)
+
+def power(X, y):
+
+    """
+    Sub-method to fit a Power regression model.
+
+    Returns:
+    - - - -
+    fitted: lmtfit model object
+        fitted model
+    """
+
+    inds = np.argsort(X)
+    X = X[inds]
+    y = y[inds]
+
+    model = models.PowerLawModel(
+        independent_vars=['x'], nan_policy='propagate')
+    fitted = model.fit(y, x=X)
+
+    return fitted
+
+def exponential(X, y):
+
+    """
+    Sub-method to fit an Exponential regression model.
+
+    Returns:
+    - - - -
+    fitted: lmtfit model object
+        fitted model
+    """
+
+    inds = np.argsort(X)
+    X = X[inds]
+    y = y[inds]
+
+    model = models.ExponentialModel(
+        independent_vars=['x'], nan_policy='propagate')
+    fitted = model.fit(y, x=X)
+
+    return fitted
+
+def linear(X, y):
+
+    """
+    Sub-method to fit a Linear regression model.
+    """
+
+    inds = np.argsort(X)
+    X = X[inds]
+    y = y[inds]
+
+    model = models.LinearModel(
+        independent_vars=['x'], nan_policy='propagate')
+    fitted = model.fit(y, x=X)
+
+    return fitted
 
 
 def fit(X, y):
@@ -346,20 +406,28 @@ def fit(X, y):
         independent variable i.e. spatial dispersion
     y: float, array
         dependent variable i.e. spatial correlation
+
+    Returns:
+    - - - -
+    e, p: lmfit model objects
+        fitted exponential (e) and power (p) models
     """
 
-    inds = np.argsort(X)
-    model = models.PowerLawModel(
-        independent_vars=['x'], nan_policy='propagate')
-    fitted = model.fit(y[inds], x=X[inds])
+    E = exponential(X, y)
+    P = power(X, y)
+    L = linear(X, y)
 
-    return fitted
+    return [E, P, L]
 
 
 def plot_model_fit(fitted_model):
     
     """
     Sub-method to plot the fitted models.
+
+    Returns:
+    - - - -
+    fig: matplotlib Figure object
     """
 
     [fig, gridspec] = fitted_model.plot(datafmt='o',
