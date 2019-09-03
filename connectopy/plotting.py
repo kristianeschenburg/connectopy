@@ -47,6 +47,86 @@ plot_model_fit:
     Sub-method.  Plots fitted model.
 """
 
+def connectopyBy(subject_id, hemisphere, labeldir, conndir, nsize=5):
+
+    """
+    Generate DataFrame objects for each source region.  Contains the connectopy
+    data for the first two eigenvectors of the source region, along with the 
+    pairwise correlation / dispersion data.
+
+    Parameters:
+    - - - - -
+    subject_id: string
+        Subject name
+    hemisphere: string
+        Hemisphere to process ['L', 'R']
+    labeldir: string
+        Directory where label files exist
+    conndir: string
+        Directory where connectopy maps exist
+    nsize: int
+        Mapping neighborhood size
+    """
+
+    dir_out = '%sPlots/%s/' % (conndir, subject_id)
+    dir_evec = '%sDesikan/%s/' % (conndir, subject_id)
+    dir_func = '%sNeighborFunctional/%s/' % (conndir, subject_id)
+    dir_disp = '%sNeighborDistances/%s/' % (conndir, subject_id)
+
+    label_file = '%s%s.%s.aparc.32k_fs_LR.label.gii' % (labeldir, subject_id, hemisphere)
+    R = re.Extractor(label_file)
+    region_map = R.map_regions()
+
+    regions = list(region_map.keys())
+    regions.sort()
+    regions = [x for x in regions if x not in ['corpuscallosum']]
+
+    col_names = ['e1', 'e2'] + regions
+
+    for i, source_region in enumerate(regions):
+
+        func_df = pd.DataFrame(columns=col_names, index=None)
+        disp_df = pd.DataFrame(columns=col_names, index=None)
+
+        sinds = region_map[source_region]
+
+        evec_file = '%s%s.%s.%s.2.brain.Evecs.func.gii' % (
+            dir_evec, subject_id, hemisphere, source_region)
+
+        evecs = loaded.load(evec_file)
+        func_df['e1'] = evecs[sinds, 0]
+        func_df['e2'] = evecs[sinds, 1]
+        disp_df['e1'] = evecs[sinds, 0]
+        disp_df['e2'] = evecs[sinds, 1]
+
+        for j, target_region in enumerate(regions):
+
+            if source_region != target_region:
+
+                func_file = '%s%s.%s.%s.2.%s.mean_knn.func.gii' % (
+                    dir_func, subject_id, hemisphere, source_region, target_region)
+
+                func = loaded.load(func_file)
+                func = func[sinds, nsize-1]
+                func_df[target_region] = func
+
+                disp_file = '%s%s.%s.Distance.2.%s.func.gii' % (
+                    dir_disp, subject_id, hemisphere, target_region)
+
+                disp = loaded.load(disp_file)
+                disp = disp[sinds, nsize-1]
+                disp_df[target_region] = disp
+            
+            else:
+                disp_df[target_region] = np.nan
+                func_df[target_region] = np.nan
+    
+
+        out_func = '%s%s.%s.%s.Functional.csv' % (dir_out, subject_id, hemisphere, source_region)
+        out_dist = '%s%s.%s.%s.Dispersion.csv' % (dir_out, subject_id, hemisphere, source_region)
+        func_df.to_csv(out_func, index=False)
+        disp_df.to_csv(out_dist, index=False)
+
 
 def csv2matrix(subject_id, hemisphere, modeldir, mtype):
 
@@ -221,7 +301,7 @@ def density(X, y, sreg, treg):
     return g
 
 
-def prep_data(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere, nsize):
+def prep_data(subject_id, sreg, treg, region_map, dir_func, dir_dist, hemisphere, nsize):
 
     """
     Source and target distance and correlation data for modeling.
@@ -232,8 +312,8 @@ def prep_data(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere,
         Subject name
     sreg, treg: string
         source, target region pair
-    dir_label: string
-        Directory where labels exist
+    region_map: dictioary
+        mapping from region name to cortical indices
     dir_func: string
         Directory where Nearest Neighbor correlation maps exist
     dir_dist: string:
@@ -260,11 +340,6 @@ def prep_data(subject_id, sreg, treg, dir_label, dir_func, dir_dist, hemisphere,
     base_dist = '%s.%s.Distance.2.%s.func.gii' % (subject_id, hemisphere, treg)
     in_dist = '%s%s/%s' % (dir_dist, subject_id, base_dist)
     dist = loaded.load(in_dist)
-
-    in_label = '%s%s.%s.aparc.32k_fs_LR.label.gii' % (
-        dir_label, subject_id, hemisphere)
-    R = re.Extractor(in_label)
-    region_map = R.map_regions()
 
     source_indices = region_map[sreg]
     nsize = nsize-1
