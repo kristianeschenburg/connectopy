@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 18 19:24:48 2016
-
-@author: kristianeschenburg
-"""
-
 import numpy as np
 from numpy import linalg as LA
 
