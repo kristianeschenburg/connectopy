@@ -3,4 +3,4 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-from . import (l1_median, affine, write, similarity_mapping)
+from . import (l1_median, affine, write)
