@@ -105,7 +105,7 @@ class CoClustering(object):
             to different clusters.
         """
 
-        z = np.zeros((regions.shape[0], regions.shape[0]))
+        z = np.zeros((labels.shape[0], labels.shape[0]))
         for l in np.unique(labels):
             idx = np.where(labels == l)[0]
             pairs = [(u, v) for u in idx for v in idx]
